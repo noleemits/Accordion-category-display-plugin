@@ -1,0 +1,85 @@
+.document-category-list{
+	padding: 2rem 1.5rem;
+	background-color: #fff;
+}
+/* Basic styles for the accordion */
+.category-title, .subcategory-title {
+  cursor: pointer;
+  padding: 5px;
+  margin: 5px 0;
+	display: flex;
+    gap: 20px;
+}
+.category-title img, .subcategory-title img{
+	width: 24px;
+	height: fit-content;
+}
+.category-title h3, .subcategory-title h4{
+	font-family: inherit;
+	font-size: 18px;
+}
+.category-title h3{
+	font-weight: bold;
+}
+.subcategory-title h4{
+	font-weight: normal;
+}
+/* Style for list items */
+.category-item, .subcategory-item {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Style for post list */
+.post-list {
+  display: none; /* Initially hide the posts */
+  padding-left: 20px; /* Indent posts */
+	font-size: 16px;
+	list-style-type: none;
+	    padding: 1rem 2rem;
+    border: 1px solid #f3f3f3;
+    margin: 1rem 0;
+}
+li.post-item img{
+	width: 32px;
+}
+.post-item{
+	display: flex;
+    justify-content: space-between;
+}
+/* Style for subcategory list */
+.subcategory-list {
+  padding-left: 10px; /* Indent subcategories */
+}
+
+.post-list, .subcategory-list {
+  overflow: hidden;
+  max-height: 0;
+  padding-left: 10px; /* Adjust as needed */
+  transition: max-height 0.5s ease-out; /* Smooth transition for the max-height */
+}
+ul.post-list.expanded {
+    background: #fbfbfb;
+}
+.expanded {
+	    width: max(97%, 300px);
+    margin-left: auto;
+  display: block; /* Show the expanded elements */
+	  max-height: 1500px; /* This should be large enough to accommodate the content. Adjust as necessary. */
+}
+
+.toggle-icon {
+display: flex;
+	    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+	border: 1px solid #6e6e6e;
+	color: #6e6e6e;
+  margin-right: 5px; /* Space between icon and folder image */
+  cursor: pointer;
+}
+.toggle-icon span{
+margin-top: -5px;	
+}
