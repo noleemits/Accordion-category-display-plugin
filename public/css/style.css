@@ -17,6 +17,7 @@
 .category-title h3, .subcategory-title h4{
 	font-family: inherit;
 	font-size: 18px;
+    margin: 0;
 }
 .category-title h3{
 	font-weight: bold;
@@ -47,6 +48,7 @@ li.post-item img{
 .post-item{
 	display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 /* Style for subcategory list */
 .subcategory-list {

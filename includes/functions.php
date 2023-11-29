@@ -64,7 +64,7 @@ function display_category_with_posts($category_id, $is_parent = false) {
         if ($is_parent) {
             $output .= '<div class="category-title" data-toggle="accordion">';
             $output .= '<span class="toggle-icon"><span>+</span></span>'; // Plus icon by default
-            $output .= '<img src="' . plugin_dir_url(dirname(__FILE__)) . 'Folder-icon.png" alt="Folder icon">';
+            $output .= '<img src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/Folder-icon.png" alt="Folder icon">';
             $output .= '<h3>' . get_term($category_id)->name . '</h3></div>';
         }
 
@@ -74,7 +74,7 @@ function display_category_with_posts($category_id, $is_parent = false) {
             while ($query->have_posts()) {
                 $query->the_post();
                 $file_url = get_field('file_upload', get_the_ID());
-                $file_link = is_string($file_url) ? '<a href="' . esc_url($file_url) . '" download><img src="' . plugin_dir_url(dirname(__FILE__)) . 'PDF-icon.png"></a>' : '';
+                $file_link = is_string($file_url) ? '<a href="' . esc_url($file_url) . '" download><img src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/PDF-icon.png"></a>' : '';
                 $output .= '<li class="post-item">' . esc_html(get_the_title()) . ' ' . $file_link . '</li>';
             }
             $output .= '</ul>';
@@ -89,7 +89,7 @@ function display_category_with_posts($category_id, $is_parent = false) {
                 $sub_output = display_category_with_posts($subcategory->term_id);
                 if (!empty($sub_output)) {
                     $output .= '<li class="subcategory-item">';
-                    $output .= '<div class="subcategory-title" data-toggle="accordion"><span class="toggle-icon"><span>+</span></span><img src="/wp-content/uploads/2023/11/folder.png"><h4>' . $subcategory->name . '</h4></div>';
+                    $output .= '<div class="subcategory-title" data-toggle="accordion"><span class="toggle-icon"><span>+</span></span><img src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/Folder-icon.png"><h4>' . $subcategory->name . '</h4></div>';
                     $output .= $sub_output; // This will include the subcategory posts and nested subcategories
                     $output .= '</li>';
                 }
