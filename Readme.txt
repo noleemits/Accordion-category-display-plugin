@@ -32,6 +32,10 @@ Features:
 
 Yes. While this plugin is configured for use with custom post types created by ACF Extended, it can be adapted for regular posts. To do this, edit the `functions.php` file in the `includes` directory and modify the `post_type` and `taxonomy` parameters to suit standard posts and categories.
 
+= The plugin is creating a custom folder when files are getting added, can I disable that? =
+
+Yes. You can go to the functions in the includes folder and modify the file_upload_folder function
+
 == Screenshots ==
 
 1. Accordion display of categories and posts.
