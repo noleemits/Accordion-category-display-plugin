@@ -64,7 +64,7 @@ function display_category_with_posts($category_id, $is_parent = false) {
         if ($is_parent) {
             $output .= '<div class="category-title" data-toggle="accordion">';
             $output .= '<span class="toggle-icon"><span>+</span></span>'; // Plus icon by default
-            $output .= '<img src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/Folder-icon.png" alt="Folder icon">';
+            $output .= '<img class="folder-icon"  src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/icon-closed-folder.png" alt="Folder icon">';
             $output .= '<h3>' . get_term($category_id)->name . '</h3></div>';
         }
 
@@ -89,7 +89,7 @@ function display_category_with_posts($category_id, $is_parent = false) {
                 $sub_output = display_category_with_posts($subcategory->term_id);
                 if (!empty($sub_output)) {
                     $output .= '<li class="subcategory-item">';
-                    $output .= '<div class="subcategory-title" data-toggle="accordion"><span class="toggle-icon"><span>+</span></span><img src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/Folder-icon.png"><h4>' . $subcategory->name . '</h4></div>';
+                    $output .= '<div class="subcategory-title" data-toggle="accordion"><span class="toggle-icon"><span>+</span></span><img class="folder-icon" src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/icon-closed-folder.png"><h4>' . $subcategory->name . '</h4></div>';
                     $output .= $sub_output; // This will include the subcategory posts and nested subcategories
                     $output .= '</li>';
                 }
