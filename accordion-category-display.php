@@ -19,16 +19,23 @@
 }
 add_action('wp_enqueue_scripts', 'acd_enqueue_scripts');
 
+//Post types
+require_once plugin_dir_path(__FILE__) . 'includes/post-types.php';
+
 //Functions and shortcode
 require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
 
 //Activation and deactivation
 function acd_activate() {
-    // Flush rewrite rules or other setup tasks
+    // Register custom post type and taxonomy
+    create_document_post_type();
+    create_document_category_taxonomy();
+
+    // Flush rewrite rules to ensure the custom post type URLs work correctly
     flush_rewrite_rules();
 }
 function acd_deactivate() {
-    // Flush rewrite rules or other setup tasks
+    // Flush rewrite rules upon deactivation
     flush_rewrite_rules();
 }
 
