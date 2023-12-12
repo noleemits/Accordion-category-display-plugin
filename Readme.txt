@@ -25,6 +25,7 @@ Features:
 1. Upload `accordion-category-display` to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Use the shortcode `[document_category_list]` in your posts or pages to display the accordion.
+4. In ACF create a post type called Document with value document, a taxonomy called document category with value document_category and user field called user field with value user_field
 
 == Frequently Asked Questions ==
 

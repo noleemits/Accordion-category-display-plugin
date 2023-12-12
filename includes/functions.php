@@ -30,15 +30,43 @@ function document_category_list_shortcode() {
 }
 add_shortcode('document_category_list', 'document_category_list_shortcode');
 
+
+// Standalone function to recursively get allowed users from parent categories
+function get_allowed_users_from_parents($term_id) {
+    $allowed_users = get_field('user_field', 'document_category_' . $term_id);
+    if (!$allowed_users) {
+        $parent_id = get_term($term_id)->parent;
+        if ($parent_id != 0) {
+            return get_allowed_users_from_parents($parent_id);
+        }
+    }
+    return $allowed_users;
+}
+
+
 function display_category_with_posts($category_id, $is_parent = false) {
     $output = '';
     $current_user_id = get_current_user_id();
 
+    // Fetch allowed users from ACF field
+    $allowed_users = get_field('user_field', 'document_category_' . $category_id);
+
+    // Ensure $allowed_users is always an array of user IDs
+    if (isset($allowed_users['ID'])) {
+        $allowed_user_ids = array($allowed_users['ID']); // Single user
+    } else {
+        $allowed_user_ids = array_column((array)$allowed_users, 'ID'); // Multiple users
+    }
+
+    // Check if the current user is an administrator or allowed user
+    if (!current_user_can('administrator') && !in_array($current_user_id, $allowed_user_ids)) {
+        return ''; // Return empty string if user is not allowed
+    }
+
     // WP_Query for fetching posts
     $args = array(
         'post_type' => 'document',
-      //  'author'    => $current_user_id, // Current user's posts
-        'post_status' => array('publish', 'private'), // Include both published and private posts
+        'post_status' => array('publish', 'private'),
         'tax_query' => array(
             array(
                 'taxonomy' => 'document_category',
@@ -101,6 +129,7 @@ function display_category_with_posts($category_id, $is_parent = false) {
     return $output;
 }
 
+
 //Change default directory for the file upload
 // Target 'file_upload' field for custom upload directory and filename
 add_filter('acf/upload_prefilter/name=file_upload', 'my_acf_upload_prefilter');
@@ -156,4 +185,5 @@ function cleanup_pdf_thumbnails($metadata, $attachment_id) {
     }
     return $metadata;
 }
+
 
