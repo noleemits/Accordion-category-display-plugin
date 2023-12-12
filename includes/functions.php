@@ -49,7 +49,7 @@ function display_category_with_posts($category_id, $is_parent = false) {
     $current_user_id = get_current_user_id();
 
     // Fetch allowed users from ACF field
-    $allowed_users = get_field('user_field', 'document_category_' . $category_id);
+    $allowed_users = get_allowed_users_from_parents($category_id);
 
     // Ensure $allowed_users is always an array of user IDs
     if (isset($allowed_users['ID'])) {
