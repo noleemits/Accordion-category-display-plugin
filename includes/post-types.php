@@ -9,7 +9,7 @@ function create_document_post_type() {
         ),
         'public' => true,
         'has_archive' => true,
-        'supports' => array('title', 'editor', 'thumbnail'),
+        'supports' => array('title'),
         'menu_icon' => 'dashicons-media-document',
     );
     register_post_type('document', $args);

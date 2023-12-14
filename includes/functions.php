@@ -101,13 +101,25 @@ function display_category_with_posts($category_id, $is_parent = false) {
             $output .= '<ul class="post-list">';
             while ($query->have_posts()) {
                 $query->the_post();
-                $file_url = get_field('file_upload', get_the_ID());
-                $file_link = is_string($file_url) ? '<a href="' . esc_url($file_url) . '" download><img src="' . plugin_dir_url(dirname(__FILE__)) . 'public/img/PDF-icon.png"></a>' : '';
+                
+                // Retrieve the file URL from the post meta instead of the ACF field
+                $file_url = get_post_meta(get_the_ID(), 'my_custom_document_file', true);
+                
+                // Generate the file link only if a URL is saved in the post meta
+                $file_link = '';
+                if (!empty($file_url)) {
+                    // Here you can add additional logic to determine the icon based on file type if needed
+                    $icon_url = plugin_dir_url(dirname(__FILE__)) . 'public/img/PDF-icon.png'; // Update path if necessary
+                    $file_link = '<a href="' . esc_url($file_url) . '" download><img src="' . esc_url($icon_url) . '"></a>';
+                }
+                
                 $output .= '<li class="post-item">' . esc_html(get_the_title()) . ' ' . $file_link . '</li>';
             }
             $output .= '</ul>';
             wp_reset_postdata(); // Reset the global post object
         }
+        
+
 
         // Output subcategories
         if (!empty($subcategories)) {
@@ -132,58 +144,165 @@ function display_category_with_posts($category_id, $is_parent = false) {
 
 //Change default directory for the file upload
 // Target 'file_upload' field for custom upload directory and filename
-add_filter('acf/upload_prefilter/name=file_upload', 'my_acf_upload_prefilter');
-function my_acf_upload_prefilter($errors) {
-    // File upload folder
-    add_filter('upload_dir', 'file_upload_folder', 20);
+// add_filter('acf/upload_prefilter/name=file_upload', 'my_acf_upload_prefilter');
+// function my_acf_upload_prefilter($errors) {
+//     // File upload folder
+//     add_filter('upload_dir', 'file_upload_folder', 20);
     
-    // File upload name
-    add_filter('wp_handle_upload_prefilter', 'file_upload_name', 20);
+//     // File upload name
+//     add_filter('wp_handle_upload_prefilter', 'file_upload_name', 20);
 
-    return $errors;
-}
+//     return $errors;
+// }
 
-// File upload folder - it creates it it doesn't exist
-function file_upload_folder($uploads) {
-    // Define the custom folder path
-    $custom_dir = '/customer_files';
+// // File upload folder - it creates it it doesn't exist
+// function file_upload_folder($uploads) {
+//     // Define the custom folder path
+//     $custom_dir = '/customer_files';
 
-    // Full path to the custom directory
-    $custom_path = $uploads['basedir'] . $custom_dir;
+//     // Full path to the custom directory
+//     $custom_path = $uploads['basedir'] . $custom_dir;
 
-    // Check if the custom directory exists, and if not, create it
-    if (!file_exists($custom_path)) {
-        wp_mkdir_p($custom_path);
-    }
+//     // Check if the custom directory exists, and if not, create it
+//     if (!file_exists($custom_path)) {
+//         wp_mkdir_p($custom_path);
+//     }
 
-    // Set the custom folder for uploads
-    $uploads['path'] = $custom_path;
-    $uploads['url'] = $uploads['baseurl'] . $custom_dir;
-    return $uploads;
-}
+//     // Set the custom folder for uploads
+//     $uploads['path'] = $custom_path;
+//     $uploads['url'] = $uploads['baseurl'] . $custom_dir;
+//     return $uploads;
+// }
 
 
-// File upload name
-function file_upload_name($file) {
-    $file['name'] = "{$file['name']}";
-    return $file;
-}
+// // File upload name
+// function file_upload_name($file) {
+//     $file['name'] = "{$file['name']}";
+//     return $file;
+// }
 
 // Clean up thumbnails for PDFs after upload
-add_filter('wp_generate_attachment_metadata', 'cleanup_pdf_thumbnails', 10, 2);
-function cleanup_pdf_thumbnails($metadata, $attachment_id) {
-    $attachment = get_post($attachment_id);
-    if ($attachment->post_mime_type === 'application/pdf') {
-        $upload_dir = wp_upload_dir();
-        foreach ($metadata['sizes'] as $size => $fileinfo) {
-            $filepath = $upload_dir['path'] . '/' . $fileinfo['file'];
-            if (file_exists($filepath)) {
-                unlink($filepath);
-            }
-        }
-        $metadata['sizes'] = []; // Reset sizes to prevent database bloat
+// add_filter('wp_generate_attachment_metadata', 'cleanup_pdf_thumbnails', 10, 2);
+// function cleanup_pdf_thumbnails($metadata, $attachment_id) {
+//     $attachment = get_post($attachment_id);
+//     if ($attachment->post_mime_type === 'application/pdf') {
+//         $upload_dir = wp_upload_dir();
+//         foreach ($metadata['sizes'] as $size => $fileinfo) {
+//             $filepath = $upload_dir['path'] . '/' . $fileinfo['file'];
+//             if (file_exists($filepath)) {
+//                 unlink($filepath);
+//             }
+//         }
+//         $metadata['sizes'] = []; // Reset sizes to prevent database bloat
+//     }
+//     return $metadata;
+// }
+
+//handle media uploads
+
+function my_admin_enqueue_scripts() {
+    global $typenow;
+    if ($typenow == 'document') { 
+        wp_enqueue_media();
     }
-    return $metadata;
+}
+add_action('admin_enqueue_scripts', 'my_admin_enqueue_scripts');
+
+
+// Add meta box for file uploads
+function my_custom_file_upload_meta_box() {
+    add_meta_box(
+        'my_custom_file_upload',          // Unique ID of the meta box
+        __('Upload File', 'textdomain'),  // Title of the meta box
+        'my_custom_file_upload_callback', // Callback function
+        'document',                       // Post type
+        'advanced',                       // Context
+        'high'                            // Priority
+    );
+}
+add_action('add_meta_boxes', 'my_custom_file_upload_meta_box');
+
+// Callback function to display the meta box
+function my_custom_file_upload_callback($post) {
+    wp_nonce_field('my_custom_file_upload', 'my_custom_file_upload_nonce');
+    
+    // Button that triggers the media uploader
+    echo '<button type="button" class="button" id="my_media_manager">Upload or Select Document</button>';
+    // Hidden input to store the file URL
+    echo '<input type="hidden" id="my_custom_document" name="my_custom_document" value="" />';
 }
 
+// Save the file when the post is saved
+function my_save_custom_file($post_id) {
+    // Check if our nonce is set and verify the admin has the intent to save the file.
+    if (!isset($_POST['my_custom_file_upload_nonce']) || !wp_verify_nonce($_POST['my_custom_file_upload_nonce'], 'my_custom_file_upload')) {
+        return;
+    }
+    // If this is an autosave, our form has not been submitted, so we don't want to do anything.
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+    // Check the user's permissions.
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+    // Its safe for us to save the data now.
+    if (!empty($_FILES['my_custom_document']['name'])) {
+        // The wp_handle_upload function will take care of the rest.
+        $file = wp_handle_upload($_FILES['my_custom_document'], ['test_form' => false]);
+        if (isset($file['url'])) {
+            update_post_meta($post_id, 'my_custom_document_file', $file['url']);
+        }
+    }
+}
+add_action('save_post', 'my_save_custom_file');
 
+// Make sure the file array isn't empty
+function update_edit_form() {
+    echo ' enctype="multipart/form-data"';
+}
+add_action('post_edit_form_tag', 'update_edit_form');
+
+function my_enqueue_media_uploader() {
+    global $typenow;
+    if ($typenow == 'document') {
+        // Your enqueue media script
+        wp_enqueue_media();
+        ?>
+        <script type="text/javascript">
+        jQuery(document).ready(function($){
+            $('#my_media_manager').click(function(e) {
+                e.preventDefault();
+                var image_frame;
+                if(image_frame){
+                    image_frame.open();
+                }
+                // Define image_frame as wp.media object
+                image_frame = wp.media({
+                    title: 'Select Media',
+                    multiple : false,
+                    library : {
+                        type : 'image,application/pdf' // Modify to accept the types you want
+                    }
+                });
+
+                image_frame.on('close',function() {
+                    // On close, get selections and save to the hidden input
+                    var selection =  image_frame.state().get('selection').first().toJSON();
+                    $('#my_custom_document').val(selection.url);
+                });
+
+                image_frame.on('select',function() {
+                    // On select, get selections and save to the hidden input
+                    var selection =  image_frame.state().get('selection').first().toJSON();
+                    $('#my_custom_document').val(selection.url);
+                });
+
+                image_frame.open();
+            });
+        });
+        </script>
+        <?php
+    }
+}
+add_action('admin_footer', 'my_enqueue_media_uploader'); // admin_footer is just one of the hooks you could use
