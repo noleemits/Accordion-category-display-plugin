@@ -23,7 +23,7 @@ add_action('wp_enqueue_scripts', 'acd_enqueue_scripts');
 require_once plugin_dir_path(__FILE__) . 'includes/post-types.php';
 
 //Functions and shortcode
-require_once plugin_dir_path(__FILE__) . 'includes/functions.php';
+require_once plugin_dir_path(__FILE__) . 'includes/index.php';
 
 //Activation and deactivation
 function acd_activate() {
