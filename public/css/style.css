@@ -85,3 +85,8 @@ display: flex;
 .toggle-icon span{
 margin-top: -5px;	
 }
+
+/*Settings page*/
+.accordion-category-options input {
+  margin-left: 20px;
+}

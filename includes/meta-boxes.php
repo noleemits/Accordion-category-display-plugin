@@ -17,40 +17,86 @@ add_action('add_meta_boxes', 'my_custom_file_upload_meta_box');
 // Callback function to display the meta box
 function my_custom_file_upload_callback($post)
 {
+
     wp_nonce_field('my_custom_file_upload', 'my_custom_file_upload_nonce');
+
+    // Retrieve the current file URL if it exists
+    $current_file = get_post_meta($post->ID, 'my_custom_document_file', true);
 
     // Button that triggers the media uploader
     echo '<button type="button" class="button" id="my_media_manager">Upload or Select Document</button>';
+
+    // Display the name of the current file if there is one
+    if (!empty($current_file)) {
+        // Get just the file name from the URL
+        $file_name = basename($current_file);
+        echo '<div id="current_file"><br /><strong>Current File:</strong> ' . esc_html($file_name) . '</div>';
+    }
+
     // Hidden input to store the file URL
-    echo '<input type="hidden" id="my_custom_document" name="my_custom_document" value="" />';
+    echo '<input type="hidden" id="my_custom_document" name="my_custom_document" value="' . esc_attr($current_file) . '" />';
 }
 
 
 // Save the file when the post is saved
-function my_save_custom_file($post_id)
-{
+function my_save_custom_file($post_id) {
+    error_log("Function start: my_save_custom_file");
+
     // Check if our nonce is set and verify the admin has the intent to save the file.
     if (!isset($_POST['my_custom_file_upload_nonce']) || !wp_verify_nonce($_POST['my_custom_file_upload_nonce'], 'my_custom_file_upload')) {
         return;
     }
+
     // If this is an autosave, our form has not been submitted, so we don't want to do anything.
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
+
     // Check the user's permissions.
     if (!current_user_can('edit_post', $post_id)) {
         return;
     }
+
     // Its safe for us to save the data now.
     if (!empty($_POST['my_custom_document'])) {
         // Sanitize the URL
         $file_url = esc_url_raw($_POST['my_custom_document']);
+
+        // Get file extension
+        $file_extension = strtolower(pathinfo(parse_url($file_url, PHP_URL_PATH), PATHINFO_EXTENSION));
+        error_log("File extension: " . $file_extension);
+
+        // Retrieve the option and ensure it's an array before filtering
+        $options = get_option('accordion_category_options');
+        if (!$options || !is_array($options)) {
+            $options = array(); // Initialize as an empty array if not set
+        }
+        $allowed_file_types = array_keys(array_filter($options));
+        $allowed_extensions = array_map(function ($type) {
+            return $type;
+        }, $allowed_file_types);
+
+        // For debugging: Output the allowed extensions
+        error_log(print_r($allowed_extensions, true));
+
+        // Check if the file extension is allowed
+        if (!in_array($file_extension, $allowed_extensions)) {
+            error_log("Disallowed file type: " . $file_extension);
+            // Output an admin notice error and stop the function
+            add_action('admin_notices', function () use ($file_extension) {
+                echo "<div class='notice notice-error'><p>File type .{$file_extension} is not allowed.</p></div>";
+            });
+            return;
+        }
+
         // Save the file URL
         update_post_meta($post_id, 'my_custom_document_file', $file_url);
     }
-}
-add_action('save_post', 'my_save_custom_file');
 
+    error_log("Function end: my_save_custom_file");
+}
+
+add_action('save_post', 'my_save_custom_file');
 
 // Make sure the file array isn't empty
 function update_edit_form()
@@ -58,3 +104,5 @@ function update_edit_form()
     echo ' enctype="multipart/form-data"';
 }
 add_action('post_edit_form_tag', 'update_edit_form');
+
+

@@ -93,7 +93,7 @@ function display_category_with_posts($category_id, $is_parent = false)
             while ($query->have_posts()) {
                 $query->the_post();
 
-                // Retrieve the file URL from the post meta instead of the ACF field
+                // Retrieve the file URL from the post meta 
                 $file_url = get_post_meta(get_the_ID(), 'my_custom_document_file', true);
 
                 // Generate the file link only if a URL is saved in the post meta

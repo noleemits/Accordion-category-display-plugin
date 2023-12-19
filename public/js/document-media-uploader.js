@@ -1,31 +1,40 @@
-jQuery(document).ready(function($){
+jQuery(document).ready(function($) {
+
+    var file_frame; // Declare this outside the click handler
+
     $('#my_media_manager').click(function(e) {
         e.preventDefault();
-        var image_frame;
-        if(image_frame){
-            image_frame.open();
+
+        if (file_frame) {
+            // Open the existing frame
+            file_frame.open();
+            return;
         }
-        // Define image_frame as wp.media object
-        image_frame = wp.media({
-            title: 'Select Media',
-            multiple : false,
-            library : {
-                type : 'image,application/pdf' // Modify to accept the types you want
+
+        // Initialize the media frame
+        file_frame = wp.media({
+            title: 'Select a File',
+            button: {
+                text: 'Use this file'
+            },
+            multiple: false,
+            library: {
+                type: ['image', 'application'] // Allow all types initially
             }
         });
 
-        image_frame.on('close',function() {
-            // On close, get selections and save to the hidden input
-            var selection =  image_frame.state().get('selection').first().toJSON();
-            $('#my_custom_document').val(selection.url);
+        file_frame.on('select', function() {
+            var attachment = file_frame.state().get('selection').first().toJSON();
+            var fileType = attachment.filename.split('.').pop().toLowerCase();
+
+            if (myPluginData.allowedFileTypes.includes(fileType)) {
+                $('#my_custom_document').val(attachment.url);
+            } else {
+                alert('File type .' + fileType + ' is not allowed.');
+            }
         });
 
-        image_frame.on('select',function() {
-            // On select, get selections and save to the hidden input
-            var selection =  image_frame.state().get('selection').first().toJSON();
-            $('#my_custom_document').val(selection.url);
-        });
-
-        image_frame.open();
+        // Open the frame
+        file_frame.open();
     });
 });
