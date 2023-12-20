@@ -85,3 +85,9 @@ display: flex;
 .toggle-icon span{
 margin-top: -5px;	
 }
+
+/*Settings page*/
+.accordion-category-options input[type=checkbox],.accordion-category-options input[type=radio]{
+  margin-left: 20px !important;
+  margin-right: 10px !important;
+}

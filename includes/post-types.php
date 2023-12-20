@@ -1,7 +1,8 @@
 <?php
 
 // Register Custom Post Type Document
-function create_document_post_type() {
+function create_document_post_type()
+{
     $args = array(
         'labels' => array(
             'name' => 'Documents',
@@ -9,14 +10,15 @@ function create_document_post_type() {
         ),
         'public' => true,
         'has_archive' => true,
-        'supports' => array('title', 'editor', 'thumbnail'),
+        'supports' => array('title'),
         'menu_icon' => 'dashicons-media-document',
     );
     register_post_type('document', $args);
 }
 
 // Register Custom Taxonomy
-function create_document_category_taxonomy() {
+function create_document_category_taxonomy()
+{
     $args = array(
         'labels' => array(
             'name' => 'Folder',
