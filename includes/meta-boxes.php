@@ -39,7 +39,8 @@ function my_custom_file_upload_callback($post)
 
 
 // Save the file when the post is saved
-function my_save_custom_file($post_id) {
+function my_save_custom_file($post_id)
+{
     error_log("Function start: my_save_custom_file");
 
     // Check if our nonce is set and verify the admin has the intent to save the file.
@@ -105,4 +106,101 @@ function update_edit_form()
 }
 add_action('post_edit_form_tag', 'update_edit_form');
 
+
+//User selection metabox
+
+function custom_user_field_edit_term($term) {
+    // Check if $term is a string, which means it's the 'Add New Term' screen
+    if (is_string($term)) {
+        // Display a basic form for new terms or a message indicating that user exclusion can be set after creating the term.
+        echo '<tr class="form-field"><td>Set user exclusions after adding the category.</td></tr>';
+        return;
+    }
+
+    // If $term is an object, it's an existing term being edited
+    $selected_users = get_term_meta($term->term_id, 'acd_user_exclusions', true);
+
+    // Get all users
+    $users = get_users();
+
+    echo '<tr class="form-field">';
+    echo '<th scope="row"><label for="acd_user_exclusions">Exclude Users</label></th>';
+    echo '<td>';
+    echo '<select name="acd_user_exclusions[]" id="acd_user_exclusions" class="postform" multiple>';
+    echo '<option value="">Select users</option>';
+
+    foreach ($users as $user) {
+        $selected = in_array($user->ID, (array)$selected_users) ? ' selected' : '';
+        echo '<option value="' . esc_attr($user->ID) . '"' . $selected . '>' . esc_html($user->display_name) . '</option>';
+    }
+
+    echo '</select>';
+    echo '</td></tr>';
+}
+
+add_action('document_category_edit_form_fields', 'custom_user_field_edit_term');
+add_action('document_category_add_form_fields', 'custom_user_field_edit_term');
+
+function acd_save_user_exclusions($term_id)
+{
+    // Check for the existence of the $_POST data and nonce here for security
+
+    // Save the user exclusions if provided, otherwise save as an empty array
+    if (!empty($_POST['acd_user_exclusions'])) {
+        // Ensure the input is what you expect, sanitize it accordingly
+        $user_exclusions = array_map('intval', $_POST['acd_user_exclusions']);
+        update_term_meta($term_id, 'acd_user_exclusions', $user_exclusions);
+    } else {
+        delete_term_meta($term_id, 'acd_user_exclusions');
+    }
+}
+
+
+// Hook for saving user exclusions when a new term is created
+add_action('created_document_category', 'acd_save_user_exclusions', 10, 2);
+
+// Hook for saving user exclusions when an existing term is edited
+add_action('edited_document_category', 'acd_save_user_exclusions', 10, 2);
+
+//Apply default roles to categories
+function apply_defaults_to_new_category($term_id, $tt_id, $taxonomy)
+{
+    if ($taxonomy !== 'document_category') {
+        return;
+    }
+
+    $options = get_option('accordion_category_options');
+    $default_roles = isset($options['default_roles']) ? $options['default_roles'] : [];
+
+    update_term_meta($term_id, 'allowed_roles', $default_roles);
+}
+
+//Retrieve and apply default roles
+
+function apply_default_role_blocks_to_new_category($term_id, $tt_id, $taxonomy_data) {
+    // Extract taxonomy name from the array if needed
+    $taxonomy = is_array($taxonomy_data) && isset($taxonomy_data['taxonomy']) ? $taxonomy_data['taxonomy'] : $taxonomy_data;
+
+    if ($taxonomy !== 'document_category') {
+        return;
+    }
+
+    $options = get_option('accordion_category_options');
+    $default_roles = isset($options['default_roles']) ? $options['default_roles'] : [];
+
+    update_term_meta($term_id, 'allowed_roles', $default_roles);
+}
+
+add_action('created_document_category', 'apply_default_role_blocks_to_new_category', 10, 3);
+
+
+function accordion_category_settings_saved_notice() {
+    if (isset($_GET['settings-updated']) && $_GET['settings-updated']) {
+        $options = get_option('accordion_category_options');
+        if (!empty($options['default_roles'])) {
+            echo '<div class="notice notice-warning is-dismissible"><p>Warning: Default roles have been set. This will apply to all new categories.</p></div>';
+        }
+    }
+}
+add_action('admin_notices', 'accordion_category_settings_saved_notice');
 

@@ -33,17 +33,19 @@ require_once plugin_dir_path(__FILE__) . 'admin/accordion_category_settings.php'
 //Activation and deactivation
 function acd_activate()
 {
-    // Register custom post type and taxonomy
+
     create_document_post_type();
     create_document_category_taxonomy();
-
-    // Flush rewrite rules to ensure the custom post type URLs work correctly
     flush_rewrite_rules();
+    acd_add_custom_role();
 }
+
+
 function acd_deactivate()
 {
     // Flush rewrite rules upon deactivation
     flush_rewrite_rules();
+    acd_remove_custom_role();
 }
 
 register_activation_hook(__FILE__, 'acd_activate');
