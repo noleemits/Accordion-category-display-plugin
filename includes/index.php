@@ -17,3 +17,6 @@ require_once plugin_dir_path(__FILE__) . '/admin-scripts.php';
 
 // Include frontend display functions
 require_once plugin_dir_path(__FILE__) . '/frontend-display.php';
+
+// Include frontend display functions
+require_once plugin_dir_path(__FILE__) . '/custom-role.php';

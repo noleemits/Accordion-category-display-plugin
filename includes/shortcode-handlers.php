@@ -36,19 +36,21 @@ add_shortcode('document_category_list', 'document_category_list_shortcode');
 
 function display_category_with_posts($category_id, $is_parent = false)
 {
+    error_log("display_category_with_posts called with category ID: " . $category_id);
+
     $output = '';
     $current_user_id = get_current_user_id();
+    // Fetch allowed roles and user exclusions for the category
+    $allowed_roles = get_term_meta($category_id, 'allowed_roles', true);
+    $user_exclusions = get_term_meta($category_id, 'acd_user_exclusions', true);
 
-    // Fetch allowed users using the custom method
-    $allowed_user_ids = get_allowed_users_from_parents($category_id);
-    // Check if the current user is an administrator or an allowed user
-    if (!current_user_can('administrator') && !in_array($current_user_id, $allowed_user_ids)) {
-        return ''; // Return empty string if user is not allowed
-    }
-
-    // Check if the current user is an administrator or allowed user
-    if (!current_user_can('administrator') && !in_array($current_user_id, $allowed_user_ids)) {
-        return ''; // Return empty string if user is not allowed
+    // Check if the current user is an admin, is excluded, or has an allowed role
+    if (
+        !current_user_can('administrator') &&
+        !in_array($current_user_id, (array)$user_exclusions) &&
+        !array_intersect(wp_get_current_user()->roles, (array)$allowed_roles)
+    ) {
+        return ''; // Don't display the category if user is not an admin, not excluded, and doesn't have an allowed role
     }
 
     // WP_Query for fetching posts
@@ -73,6 +75,9 @@ function display_category_with_posts($category_id, $is_parent = false)
         'taxonomy' => 'document_category',
         'parent'   => $category_id
     ));
+    
+    // Debugging
+    error_log(print_r($subcategories, true));
 
     // Check if there are posts or subcategories to display
     if ($query->have_posts() || !empty($subcategories)) {
@@ -112,6 +117,8 @@ function display_category_with_posts($category_id, $is_parent = false)
         if (!empty($subcategories)) {
             $output .= '<ul class="subcategory-list">';
             foreach ($subcategories as $subcategory) {
+                // Debugging
+                error_log(print_r($subcategory, true));
                 // Recursively call the function for subcategories
                 $sub_output = display_category_with_posts($subcategory->term_id);
                 if (!empty($sub_output)) {
@@ -127,3 +134,53 @@ function display_category_with_posts($category_id, $is_parent = false)
 
     return $output;
 }
+
+
+function acd_add_role_selection_to_category($term)
+{
+    $roles = get_editable_roles(); // Get all WordPress roles
+    $saved_roles = get_term_meta($term->term_id, 'allowed_roles', true); // Retrieve saved roles
+
+    // Check if $term is an object. If not, it's a new term addition screen
+    $term_id = is_object($term) ? $term->term_id : 0;
+
+    // Output label and 'Select All / Deselect All' checkbox
+    echo '<label>Hide for:</label><br>';
+    echo '<input type="checkbox" id="select_all_roles" /> Select All / Deselect All<br>';
+
+    // Output checkboxes for each role except 'administrator'
+    foreach ($roles as $role_key => $role_info) {
+        if ($role_key == 'administrator') continue; // Skip the admin role
+
+        $is_checked = in_array($role_key, (array)$saved_roles) ? 'checked' : '';
+        echo '<input type="checkbox" class="role_checkbox" name="allowed_roles[]" value="' . esc_attr($role_key) . '" ' . $is_checked . '> ' . esc_html($role_info['name']) . '<br>';
+    }
+
+    // Add JavaScript for 'Select All / Deselect All' functionality
+?>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $('#select_all_roles').change(function() {
+                var checked = $(this).is(':checked');
+                $('.role_checkbox').prop('checked', checked);
+            });
+        });
+    </script>
+<?php
+}
+
+
+add_action('document_category_edit_form_fields', 'acd_add_role_selection_to_category');
+
+function acd_save_allowed_roles($term_id)
+{
+    if (isset($_POST['allowed_roles'])) {
+        update_term_meta($term_id, 'allowed_roles', $_POST['allowed_roles']);
+    } else {
+        // If no roles are selected, save an empty array
+        update_term_meta($term_id, 'allowed_roles', array());
+    }
+}
+
+add_action('created_document_category', 'acd_save_allowed_roles');
+add_action('edited_document_category', 'acd_save_allowed_roles');

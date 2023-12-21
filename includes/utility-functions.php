@@ -1,27 +1,5 @@
 <?php
 
-function custom_user_field_edit_term($term) {
-    // Get the value of the custom field; replace 'my_custom_user_field' with your field key
-    $selected_user_id = get_term_meta($term->term_id, 'my_custom_user_field', true);
-
-    // Get all users
-    $users = get_users();
-
-    echo '<tr class="form-field">';
-    echo '<th scope="row"><label for="my_custom_user_field">Select User</label></th>';
-    echo '<td>';
-    echo '<select name="my_custom_user_field" id="my_custom_user_field" class="postform">';
-    echo '<option value="">Select a user</option>';
-
-    foreach ($users as $user) {
-        echo '<option value="' . esc_attr($user->ID) . '"' . selected($selected_user_id, $user->ID, false) . '>' . esc_html($user->display_name) . '</option>';
-    }
-
-    echo '</select>';
-    echo '</td></tr>';
-}
-add_action('document_category_edit_form_fields', 'custom_user_field_edit_term');
-
 function save_custom_user_field($term_id) {
     if (isset($_POST['my_custom_user_field'])) {
         update_term_meta($term_id, 'my_custom_user_field', sanitize_text_field($_POST['my_custom_user_field']));
@@ -35,15 +13,20 @@ function get_allowed_users_from_parents($term_id) {
     $allowed_users = [];
 
     while ($term_id != 0) {
-        $user_id = get_term_meta($term_id, 'my_custom_user_field', true);
-        if ($user_id) {
-            $allowed_users[] = $user_id;
+        $user_ids = get_term_meta($term_id, 'my_custom_user_field', true);
+        if ($user_ids) {
+            if (is_array($user_ids)) {
+                $allowed_users = array_merge($allowed_users, $user_ids);
+            } else {
+                $allowed_users[] = $user_ids;
+            }
         }
         $term_id = get_term($term_id)->parent;
     }
 
     return array_unique($allowed_users);
 }
+
 //Check user access
 function user_has_access_to_category($category_id) {
     $current_user_id = get_current_user_id();
