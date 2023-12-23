@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Plugin Name: Accordion Category Display
  * Plugin URI:  http://wordpress.org/
@@ -9,8 +8,10 @@
  * Author URI:  http://wordpress.org/
  */
 
+ namespace AccordionCategoryDisplay;
 
 //Enqueue styles and scripts
+
 function acd_enqueue_scripts()
 {
     // Enqueue public styles
@@ -19,7 +20,8 @@ function acd_enqueue_scripts()
     // Enqueue public scripts
     wp_enqueue_script('acd-scripts', plugin_dir_url(__FILE__) . 'public/js/script.js', array('jquery'), false, true);
 }
-add_action('wp_enqueue_scripts', 'acd_enqueue_scripts');
+add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\acd_enqueue_scripts');
+
 
 //Post types
 require_once plugin_dir_path(__FILE__) . 'includes/post-types.php';
@@ -41,12 +43,26 @@ function acd_activate()
 }
 
 
-function acd_deactivate()
-{
-    // Flush rewrite rules upon deactivation
-    flush_rewrite_rules();
-    acd_remove_custom_role();
+
+
+require_once plugin_dir_path(__FILE__) . 'includes/AdminScripts.php';
+
+class Plugin {
+    private $adminScripts;
+    private $customRoleManager;
+
+    public function __construct() {
+        $this->adminScripts = new AdminScripts();
+        $this->customRoleManager = new CustomRoleManager();
+        $this->metaBoxes = new MetaBoxes();
+    }
+
+    public function init() {
+        $this->adminScripts->init();
+        $this->customRoleManager->init();
+        $this->metaBoxes->init();
+    }
 }
 
-register_activation_hook(__FILE__, 'acd_activate');
-register_deactivation_hook(__FILE__, 'acd_deactivate');
+$plugin = new Plugin();
+$plugin->init();
