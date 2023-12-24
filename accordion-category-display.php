@@ -22,15 +22,8 @@ function acd_enqueue_scripts()
 }
 add_action('wp_enqueue_scripts', __NAMESPACE__ . '\\acd_enqueue_scripts');
 
-
-//Post types
-require_once plugin_dir_path(__FILE__) . 'includes/post-types.php';
-
 //Functions and shortcode
 require_once plugin_dir_path(__FILE__) . 'includes/index.php';
-
-//Functions and shortcode
-require_once plugin_dir_path(__FILE__) . 'admin/accordion_category_settings.php';
 
 //Activation and deactivation
 function acd_activate()
@@ -50,17 +43,27 @@ require_once plugin_dir_path(__FILE__) . 'includes/AdminScripts.php';
 class Plugin {
     private $adminScripts;
     private $customRoleManager;
+    private $metaBoxes;
+    private $postTypes;
+    private $shortcodeHandlers;
+    private $accordionCategorySettings;
 
     public function __construct() {
         $this->adminScripts = new AdminScripts();
         $this->customRoleManager = new CustomRoleManager();
         $this->metaBoxes = new MetaBoxes();
+        $this->postTypes = new PostTypes();
+        $this->shortcodeHandlers = new ShortcodeHandlers();
+        $this->accordionCategorySettings = new AccordionCategorySettings();
     }
 
     public function init() {
         $this->adminScripts->init();
         $this->customRoleManager->init();
         $this->metaBoxes->init();
+        $this->postTypes->init();
+        $this->shortcodeHandlers->init();
+        $this->accordionCategorySettings->init();
     }
 }
 
