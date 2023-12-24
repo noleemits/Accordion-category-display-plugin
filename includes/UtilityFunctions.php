@@ -1,5 +1,13 @@
 <?php
 
+namespace AccordionCategoryDisplay;
+
+class UtilityFunctions{
+    public function init(){
+        add_action('init', array($this, 'create_document_post_type'));
+        add_action('init', array($this, 'create_document_category_taxonomy'));
+    }
+}
 function save_custom_user_field($term_id) {
     if (isset($_POST['my_custom_user_field'])) {
         update_term_meta($term_id, 'my_custom_user_field', sanitize_text_field($_POST['my_custom_user_field']));
